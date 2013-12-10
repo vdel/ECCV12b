@@ -1,0 +1,39 @@
+Information & Contact
+=====================
+
+This code was used to compute the results of the following paper:
+
+
+"Scene semantics from long-term observation of people", 
+V. Delaitre, D. Fouhey, I. Laptev, J. Sivic, A. Gupta, and A. Efros,
+In Proceedings of the European Conference on Computer Vision (ECCV), 2012
+
+If you use this code, please cite our work:
+
+@inproceedings{delaitre2012,
+	title = {Scene semantics from long-term observation of people},
+	author = {V. Delaitre and D. Fouhey and I. Laptev and J. Sivic and A. Gupta and A. Efros},
+	booktitle = {Proc. 12th European Conference on Computer Vision},
+	year = {2012}
+}
+
+For any question or bug report, please contact:
+- Vincent Delaitre at vincent.delaitre@ens.fr
+
+
+Quick start
+===========
+
+- You first need to download and process the database. Check for instructions in:
+  http://www.di.ens.fr/willow/research/scenesemantics/database.zip
+
+- Change Matlab's current directory into the directory of this README.
+  
+- Launch computation with
+>> ssem_main('path/where/you/created/the/database', 'demo');
+
+- Results for each split will be stored in: 
+  path/where/you/created/the/database/results/demo/perf.txt
+
+- Check out the project page for additional code and data: 
+  http://www.di.ens.fr/willow/research/scenesemantics/
