@@ -5,4 +5,6 @@ clean-release:
 	rm -f APT/private/*.mex*
 	rm -f pose_detector/*~
 	rm -f pose_detector/*.mex*
+	rm -f nbest_release/*~
+	rm -f nbest_release/*.mex*
 	rm -f *~

@@ -6,6 +6,7 @@ function ssem_setup()
     addpath(fullfile(root, '3rdparty', 'kmeans'));
     addpath(fullfile(root, '3rdparty', 'liblinear-1.91', 'matlab'));
     addpath(fullfile(root, '3rdparty', 'pose_detector')); 
+    addpath(fullfile(root, '3rdparty', 'nbest_release')); 
     addpath(fullfile(root, '3rdparty', 'RANSAC')); 
     addpath(fullfile(root, '3rdparty', 'segment')); 
     addpath(fullfile(root, 'detectors')); 

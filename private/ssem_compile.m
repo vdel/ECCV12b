@@ -7,6 +7,9 @@ function ssem_compile()
     
     cd(fullfile(root, '3rdparty', 'pose_detector'));
     posedet_compile();
+    
+    cd(fullfile(root, '3rdparty', 'nbest_release'));
+    compile();
 
     if ~exist('train', 'file')    
 	    cd(fullfile(root, '3rdparty', 'liblinear-1.91', 'matlab'));
