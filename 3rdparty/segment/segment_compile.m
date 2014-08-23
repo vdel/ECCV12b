@@ -1,3 +1,3 @@
 if ~exist('segment_felz', 'file')
-    mex -DMEX segment.cpp -lm -o segment_felz
+    mex -DMEX segment_felz.cpp -lm
 end

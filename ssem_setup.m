@@ -1,6 +1,7 @@
 function ssem_setup()     
-    root = fileparts(fileparts(mfilename('fullpath')));     
+    root = fileparts(mfilename('fullpath'));     
     
+    addpath(fullfile(root, 'utils')); 
     addpath(fullfile(root, '3rdparty', 'APT')); 
     addpath(fullfile(root, '3rdparty', 'dense_sift')); 
     addpath(fullfile(root, '3rdparty', 'kmeans'));

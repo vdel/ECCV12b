@@ -18,11 +18,11 @@ function ssem_compile()
 
     if ~exist('kmeansmex', 'file')
         cd(fullfile(root, '3rdparty', 'kmeans'));    
-        mex -o kmeansmex -DMEXFILE=1 -largeArrayDims kmeans.cpp
+        mex -DMEXFILE=1 -largeArrayDims kmeansmex.cpp
     end
     
     if ~exist('fast_load_labels', 'file')
-        cd(fullfile(root, 'private'));        
+        cd(fullfile(root, 'utils'));        
         mex -largeArrayDims box2seg.c 
         mex -largeArrayDims fast_load_labels.c
     end
