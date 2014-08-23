@@ -1,4 +1,4 @@
-function avgperf = ssem_main(root, prefix)    
+function avgperf = ssem_main(root, prefix, params)    
     if nargin < 2
         prefix = 'final';
     end
@@ -8,7 +8,9 @@ function avgperf = ssem_main(root, prefix)
 
     % Set parameters
     addpath(fullfile(root, 'utils'));
-    params = ssem_set_params(root);   
+    if nargin < 3
+        params = ssem_set_params(root);   
+    end
     
     % Check for DB
     try

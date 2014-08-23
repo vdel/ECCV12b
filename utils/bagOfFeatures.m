@@ -108,7 +108,7 @@ function feat = extract_features(params, vids, maxi)
         end
         feat{i} = cell(1, length(params.s));
         for j = 1 : length(params.s)
-            feat{i}{j} = features(img, params.s(j));           
+            feat{i}{j} = myfeatures(img, params.s(j));           
         end
         feat{i} = cat(1, feat{i}{:});
     end
