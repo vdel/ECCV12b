@@ -6,10 +6,10 @@ function ssem_process_vid(params, vid)
     
     for i = 1 : length(vids)
         if length(vids) > 1
-            fprintf('Processing split %s...\n', vids(i).name);
+            fprintf('Processing split %s...\n', vids(i).id);
         end
     
-        directory = fullfile(params.root, 'tmp', vids(i).name);        
+        directory = fullfile(params.root, 'tmp', vids(i).id);        
         if ~isdir(directory)
             [~, ~] = mkdir(directory);
         end
@@ -18,13 +18,13 @@ function ssem_process_vid(params, vid)
         file = sprintf('featSIFT_%s.mat', sprintf('%d%s', params.s(1), sprintf('_%d', params.s(2:end)))); 
         if ~exist(fullfile(directory, file), 'file')
             fprintf('Computing visual features...\n');
-            compute_features(params, vids(i).name);
+            compute_features(params, vids(i));
         end
     
         % Extract superpixels
         if ~exist(fullfile(directory, 'segments.mat'), 'file')
             fprintf('Computing super-pixels...\n');
-            segment_back(params, vids(i).name);
+            segment_back(params, vids(i).id);
         end      
 
         % Extract confident poses
