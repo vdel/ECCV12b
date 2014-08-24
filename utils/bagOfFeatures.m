@@ -101,7 +101,7 @@ function feat = extract_features(params, vids, maxi)
     fprintf('Extracting features from %d videos...\n', length(vids));
     feat = cell(1, length(vids));
     for i = 1 : length(vids)
-        backfile = fullfile(params.root, 'annots', 'back', [vids{i} '.jpg']);
+        backfile = fullfile(params.root, 'annots', 'back', [vids(i).id '.jpg']);
         img = double(imread(backfile));
         if size(img, 2) > params.resize_to
             img = imresize(img, params.resize_to / size(img, 2));

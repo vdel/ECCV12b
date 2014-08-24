@@ -119,7 +119,7 @@ end
 function [joints detID] = extract_features(params, vids, maxi)
     cleanbb = cell(1, length(vids));
     for i = 1 : length(vids)
-        cleanbb{i} = perframe_nms(params, load_poses(params, vids{i}));
+        cleanbb{i} = perframe_nms(params, load_poses(params, vids(i).id));
         cleanbb{i} = cat(1, cleanbb{i}{:});
     end
     cleanbb = cat(1, cleanbb{:});        

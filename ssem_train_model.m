@@ -17,7 +17,8 @@ function [models bof bop] = ssem_train_model(params, tmpdir, splits, freqLabels)
             k = k + length(splits{i});
         end       
 
-        vids = cat(2, splits{:});
+        vid_list = cat(2, splits{:});
+        vids = ssem_load_subvideos(params, vid_list, 1);
         fprintf('Training on %d videos\n', length(vids));         
     
         % Bag of words
@@ -36,7 +37,7 @@ function [models bof bop] = ssem_train_model(params, tmpdir, splits, freqLabels)
             else
                 scores = cell(length(vids), 1);
                 for i = 1 : length(vids)
-                    [~, detIDScores] = load_poses(params, vids{i});            
+                    [~, detIDScores] = load_poses(params, vids(i).id);            
                     scores{i} = cat(1, detIDScores{:});
                 end    
                 scores = cat(1, scores{:});
@@ -55,11 +56,11 @@ function [models bof bop] = ssem_train_model(params, tmpdir, splits, freqLabels)
         end          
     
         % Computes histogram for each superpixel   
-        annots = ssem_load_annots(params, vids);
+        annots = ssem_load_annots(params, vid_list);
         dataSP = cell(length(vids), 1);
         labels = cell(length(vids), 1);
         for n = 1 : length(vids)
-            [dataSP{n}, labels{n}, blocks] = compute_hist(params, tmpdir, vids{n}, meanstd, bof, bop, annots{n});    
+            [dataSP{n}, labels{n}, blocks] = compute_hist(params, tmpdir, vids(n).id, meanstd, bof, bop, annots{n});    
         end 
         dataSP = cat(1, dataSP{:});
         labels = cat(1, labels{:});
