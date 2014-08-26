@@ -1,19 +1,19 @@
 function [dataSP labels blocks] = compute_hist(params, tmpdir, vid, meanstd, bof, bop, annots)
-    file = fullfile(tmpdir, sprintf('hist_%s_%s.mat', params.annots.name, vid));     
+    file = fullfile(tmpdir, sprintf('hist_%s_%s.mat', params.annots.name, vid.id));     
     if exist(file, 'file') == 2
         load(file);
         fprintf('Histogam loaded from %s.\n', file);        
         return;
     end
     
-    fprintf('Computing histogam for %s:\n', vid);
+    fprintf('Computing histogam for %s:\n', vid.id);
 
     if exist('annots', 'var') && ~isempty(annots)
         annots = ssem_unpack_annot(annots);
     end
         
-    [segments, neighbours] = segment_back(params, vid);
-    img = ssem_load_back(params, vid); 
+    [segments, neighbours] = segment_back(params, vid.id);
+    img = ssem_load_img(params, vid); 
     if size(img, 2) > params.segimwidth
         scale = params.segimwidth / size(img, 2);
         img = imresize(img, [round(size(img, 1) * scale) params.segimwidth]);
@@ -106,13 +106,13 @@ function [dataSP labels blocks] = compute_hist(params, tmpdir, vid, meanstd, bof
     % Interaction term
 	if params.ALP(3)    
         tic();
-        poses = load_poses(params, vid);
+        poses = load_poses(params, vid.id);
         [cleanbb personbb] = perframe_nms(params, poses);
         cleanbb = cat(1, cleanbb{:}) * scale;
         personbb = cat(1, personbb{:}) * scale;        
         
         if isempty(cleanbb)
-            njoints = length(params.jointnames);
+            njoints = length(params.joints_to_annot);
             if params.Pfeat(1)
                 h2 = sparse(nsegments, njoints * params.KP);
                 [h blocks] = add_block(h, blocks, h2, 'personFeat_jointpos'); 

@@ -60,7 +60,7 @@ function [models bof bop] = ssem_train_model(params, tmpdir, splits, freqLabels)
         dataSP = cell(length(vids), 1);
         labels = cell(length(vids), 1);
         for n = 1 : length(vids)
-            [dataSP{n}, labels{n}, blocks] = compute_hist(params, tmpdir, vids(n).id, meanstd, bof, bop, annots{n});    
+            [dataSP{n}, labels{n}, blocks] = compute_hist(params, tmpdir, vids(n), meanstd, bof, bop, annots{n});    
         end 
         dataSP = cat(1, dataSP{:});
         labels = cat(1, labels{:});
@@ -355,7 +355,7 @@ function [C J G svm scores] = train_svm(params, dataSP, labels, splits)
     fprintf('Train: %d positives, %d negatives\n', nposTrain, nnegTrain);
     
     subsetTrain = cat(1, subsetTrain{:});    
-    svm = train_binary_svm_helper(params, dataSP(subsetTrain, :), labels(subsetTrain), C, J);
+    svm = train_binary_svm_helper(dataSP(subsetTrain, :), labels(subsetTrain), C, J, G, params.bias);
 end
 
 function [AP scores] = cross_validate(params, dataSP, labels, subsetCV, subsetTest, C, J, G)
@@ -372,7 +372,7 @@ function [AP scores] = cross_validate(params, dataSP, labels, subsetCV, subsetTe
         
         subsetTrain = cat(1, subsetCV{I});    
      
-        svm = train_binary_svm_helper(params, dataSP(subsetTrain, :), labels(subsetTrain), C, J, G);
+        svm = train_binary_svm_helper(dataSP(subsetTrain, :), labels(subsetTrain), C, J, G, params.bias);
         
         scores{i} = test_binary_svm_helper(svm, dataSP(subsetTest{i}, :));               
         [~, ~, AP(i)] = precisionrecall(scores{i}, labels(subsetTest{i}));    

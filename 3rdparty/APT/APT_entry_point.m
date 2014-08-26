@@ -33,7 +33,7 @@ function APT_entry_point(task_id, job_id, fun, clusterID)
         % Set number of threads, by default SingleCompThread is activated
         if params.NSlots > 1
             warning off;
-            maxNumCompThreads(params.NSlots);
+            %maxNumCompThreads(params.NSlots); % actually raise Internal:Feval
             warning on;        
         end
         
@@ -60,7 +60,7 @@ function APT_entry_point(task_id, job_id, fun, clusterID)
         parallel_args(pos(index>0)) = common;
         clear common;                         
 
-        %If a loaded class call javaaddpath, global variable are cleared
+        %If a loaded class call javaaddpath, global variables are cleared
         %from memory. We call APT_params again:
         if ~exist('APT_PARAMS', 'var')
             global APT_PARAMS JOB_INFO;
@@ -106,7 +106,7 @@ function APT_entry_point(task_id, job_id, fun, clusterID)
             
             % run user function
             try
-                if params.WaitEnd
+                if params.WaitEnd && ~params.NoLoad
                     res{i} = execute_function(fun, parallel_args, params.nargout);
                 else
                     res{i} = execute_function(fun, parallel_args, params.funnargout); % Compute all outputs as we do not know how many are needed
@@ -133,7 +133,6 @@ function APT_entry_point(task_id, job_id, fun, clusterID)
             
             save(res_file_tmp, 'E');
         else
-            E = [];
             res = cat(1, res{:});
             t2 = clock;
             time = etime(t2, t1);  

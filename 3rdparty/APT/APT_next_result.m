@@ -1,6 +1,28 @@
-function [jobID, varargout] = APT_next_result(tID)
+function [jobID, varargout] = APT_next_result(tID, block, close)
     global APT_PARAMS;
-    persistent indexMap nfilesMap;
+    persistent indexMap nfilesMap resMap;
+    
+    if ~exist('close', 'var')
+        close = 0;        
+    end
+    
+    if ~exist('block', 'var')
+        block = 0;
+    end
+    
+    if close
+        if ~isempty(indexMap)
+            indexMap.remove({tID});
+        end
+        if ~isempty(nfilesMap)
+            nfilesMap.remove({tID});
+        end
+        if ~isempty(resMap)
+        resMap.remove({tID});
+        end
+        jobID = 0;
+        return;
+    end
     
     if ~ischar(tID)
         tID = num2str(tID);
@@ -14,6 +36,9 @@ function [jobID, varargout] = APT_next_result(tID)
     end
     if isempty(nfilesMap)
         nfilesMap = containers.Map;
+    end
+    if isempty(resMap)
+        resMap = containers.Map;
     end
     
     argdir = fullfile(APT_get_drive(APT_PARAMS.temp_drive), APT_PARAMS.temp_dir, tID, 'args');
@@ -36,27 +61,36 @@ function [jobID, varargout] = APT_next_result(tID)
     done = false;
     while fID <= nfiles
         try
-            load(fullfile(tmpdir, sprintf('res%d.mat', fID)), 'res');
+            file = fullfile(tmpdir, sprintf('res%d.mat', fID));
+            if isKey(resMap, tID)
+                res = resMap(tID);
+            else
+                load(file, 'res');                
+                resMap(tID) = res;
+            end
             nres = size(res, 1);
+            res = res(rID, :);
+            rID = rID + 1;
+            jobID = jobID + 1;
+            
             if rID > nres
                 fID = fID + 1;
                 rID = 1;
-            else
-                res = res(rID, :);
-                rID = rID + 1;
-                jobID = jobID + 1;
-                if rID > nres
-                    fID = fID + 1;
-                    rID = 1;
-                end
-                done = true;
-                break;
+                resMap.remove({tID});
             end
+            
+            done = true;
+            break;
         catch E
-            load(fullfile(argdir, sprintf('args%d.mat', fID)), 'jobIDs');
-            fID = fID + 1;
-            rID = 1;
-            jobID = jobID + length(jobIDs);
+            if block
+                fprintf('Waiting for file %s\n', file);
+                pause(10);
+            else                
+                load(fullfile(argdir, sprintf('args%d.mat', fID)), 'jobIDs');
+                fID = fID + 1;
+                rID = 1;
+                jobID = jobID + length(jobIDs);
+            end
         end
     end
     

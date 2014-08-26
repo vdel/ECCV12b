@@ -9,6 +9,7 @@ Table of Contents
 - When should the Awesome Parallel Toolbox be used ?
 - Installation
 - Quick start
+- Examples and tricks
 - Distributing APT
 - Optional parameters
 - Compilation options
@@ -16,18 +17,28 @@ Table of Contents
 - Interacting with jobs
 
 
-When should the Awesome Parallel Toolbox be used ?
-==================================================
+Have a specific need ?
+======================
 
-The Awesome Parallel Toolbox is designed to run Matlab functions on independent
-instances of parameters without getting out of Matlab. This is for example the 
-case if you have multiple images to process or if you train a model for 
-different cross-validation parameters. The computation can be done on your local
-machine or on one of the two clusters. If you are using the clusters you should 
-make sure that your jobs need a few minutes to complete (a job takes some time 
-to be launched on the cluster so if you have many very short jobs it won't be 
-efficient). You can use the 'GroupBy' optional parameter to make your jobs 
-longer (see the section "Optional parameters").                                    
+APT is like iPhone: there's an option for everything. Please check sections 
+"Optional parameters" and "Compilation options" for a comprehensive list of 
+options. 
+
+Please also refer to section "Examples and tricks" for the following topics:
+- Looking at errors
+- Setting the maximum number of jobs
+- Getting rid of the braces for constant arguments
+- Cross-validation
+- Compiling for multiple projects
+- Relaunching a task
+- Postponing the loading of results
+- Using APT in a non-blocking way
+- Anonymous functions
+- Finding missing jobs
+- Cleaning temporary files
+- Job information at runtime
+- Distributing APT
+- Making Coffee
 
 
 Installation
@@ -67,12 +78,12 @@ Quick start
 ===========
 
 Before using the Awesome Parallel Toolbox for running code on the clusters, you 
-should compile your Matlab code by calling 'APT_compile' from Matlab:
+should compile your Matlab code by calling 'APT_compile' from Matlab. Setup your
+Matlab path so that all the code you need is accessible and call:
 
 >> APT_compile
 
-It will look at your Matlab path and compile all the .m and .mex files which
-are in user-defined paths into a stand-alone binary located in 
+It will package all the .m and .mex files into a stand-alone binary located in 
 <APT_PARAMS.temp_dir> (see 'temp_dir' in section "APT configuration").                        
 You only have to recompile if the functions you run in parallel have changed.
 You don't need to compile if you run your code on your local machine.
@@ -88,10 +99,10 @@ cluster. For example, let's suppose you have the following function 'foo':
 If you want to compute 'foo(1, 3, 4)', 'foo(2, 3, 5)' and 'foo(8, 3, 0)' then
 simply do:
 
->> [u v] = APT_run('foo', {1 2 8}, {3}, {4 5 0});
+>> [u v] = APT_run('foo', [1 2 8], {3}, [4 5 0]);
 
 You will get u = {8; 10; 11} and v = {12; 30; 0}. More generally you can launch 
-any function on a set of N arguments. If an argument is constant for all 
+any function on a set of N arguments. If an argument is the same for all 
 function calls you can simply pass it in a single element cell. Otherwise you 
 have to pass all the argument instances in a N elements array, cell or 
 structure. You can also pass a 2 dimensional cell, array or structure with N 
@@ -99,22 +110,213 @@ rows. Each row will be distributed to its corresponding function call. The
 output of APT_run will be a cell with N rows containing the return parameters of
 each function calls.
 
-If the option 'CombineArgs' is activated (see section "Optional parameters"), 
-the input arguments do not have to be N elements long: they will be combined to 
-form all possible arrangements of the arguments.
+Examples and tricks
+===================
 
-You can also use anonymous functions. This is useful if you don't want to create
+Looking at errors
+-----------------
+ 
+  Here <temp_drive> and <temp_dir> refer to the value defined in APT_params.m
+  <taskID> is the number displayed when calling APT_run.
+  The directory '<temp_drive>/$USER/<temp_dir>/<taskID>/logs'
+  contains the output for each jobs. Each report is named 'report_xxx.txt' 
+  where 'xxx' is the job number (or Matlab instance number if you are running on
+  local machine). You can use the function APT_show_report to easily visualize a
+  report:
+	
+  >> APT_show_report(taskID, jobID);
+  
+  A script is also available in <temp_drive>/$USER/<temp_dir>.
+    
+	
+Setting the maximum number of jobs
+----------------------------------
+
+  The function APT_jn_set allows you to dynamically change the maximum number of
+  jobs allowed on the clusters:
+
+  >> APT_jn_set([job_limit], [cluster_id])
+  
+  Called with no argument, it will print the current job limit. Otherwise,
+  'job_limit' is the allowed maximum number of running jobs. If 'cluster_id' is
+  not set, it changes the limit for Meleze and Sequoia. If cluster_id is 1 or 2
+  it changes the limit only for Meleze or Sequoia respectively.  
+
+  A script is also available in <temp_drive>/$USER/<temp_dir>.
+  Here <temp_drive> and <temp_dir> refer to the value defined in APT_params.m
+  
+
+Getting rid of the braces for constant arguments
+------------------------------------------------
+
+Actually if an argument 'x' is the same for all function calls and if 
+numel(x) == 1 then you don't have to put the braces. 
+The following call would work:
+
+>> [u v] = APT_run('foo', [1 2 8], 3, [4 5 0]); % 3 instead of {3}
+
+
+Cross-validation
+----------------
+
+If the option 'CombineArgs' is activated the input arguments do not have to be N
+elements long: they will be combined to form all possible arrangements of the 
+arguments:
+
+>> [u v] = APT_run('foo', [1 2], 3, [4 5 0], 'CombineArgs', 1);
+
+This will return 3x1x2 cells 'u' and 'v' containing foo(1, 3, 4), foo(2, 3, 4),
+foo(1, 3, 5), foo(2, 3, 5), foo(1, 3, 0) and foo(2, 3, 0).
+
+
+Compiling for multiple projects
+-------------------------------
+
+If you have different projects, you will have to set a name for the compiled 
+code. Having a setup script which does it is a good idea:
+
+global APT_PARAMS;
+if isempty(APT_PARAMS)
+    APT_params();
+end 
+
+root = fileparts(mfilename('fullpath'));
+[~, f] = fileparts(root);
+APT_PARAMS.exec_name = f;
+
+
+Relaunching a task
+------------------
+
+  If some jobs failed because of some bug or memory issue and if this bug does 
+  not affect results' correctness of other jobs, you can relaunch failed jobs
+  by calling 'APT_run' with the task ID as first argument. For example if a task
+  had ID 123456 and if you want to increase the available memory you can do:
+
+  -> res = APT_run(123456, 'Memory', 6000);
+
+  Depending of the value of 'ResumeType' (see section "Optional parameters"),
+  it will re-launch only crashed jobs or all the non terminated jobs.
+  
+  
+Postponing the loading of results
+---------------------------------
+  
+  The option 'NoLoad' ask 'APT_run' to not load the results of the jobs. In
+  that case 'APT_run' returns the TaskID which can be used to load the job
+  results one by one by calling 'APT_next_result(TaskID)'. It returns the 
+  JobID and its output arguments. If JobID is empty you have loaded all the
+  results. For example the following call:
+
+  >> [u v] = APT_run('foo', {1 2 8}, {3}, {4 5 0});
+
+  is equivalent to:
+
+  >> taskID = APT_run('foo', {1 2 8}, {3}, {4 5 0}, 'NoLoad', 1);
+  >> u = {};
+  >> v = {};
+  >> [jobID tmpu tmpv] = APT_next_result(taskID);
+  >> while ~isempty(jobID)
+  >>     u{jobID} = tmpu;
+  >>     v{jobID} = tmpv;
+  >>     [jobID tmpu tmpv] = APT_next_result(taskID);
+  >> end
+
+  Missing/Crashed jobs are skipped so JobID is only garanteed to be increasing.
+  
+  
+Using APT in a non-blocking way
+-------------------------------
+
+  Set the 'WaitEnd' option to 1 to continue your program while jobs are running.
+  APT_run will return two arguments [tID, done]. The first argument is the task 
+  ID needed to resume the task, second argument is 2 if at least a job crashed, 
+  1 if all jobs are finished and 0 otherwise. For example this code sample runs
+  3 jobs and peridocally checks if they are finished:
+  
+      [tID, done] = APT_run('@(x)x', 1:3, 'WaitEnd', 0);
+      tic;
+      while ~done
+       fprintf('Running since %d seconds...\n', floor(toc));
+       pause(1);
+       [~, done] = APT_run(tID, 'WaitEnd', 0, 'Verbose', 0);
+      end
+      result = APT_run(tID, 'Verbose', 0);
+      fprintf('Terminated !\n');
+      disp(result);                                       
+  
+  
+Anonymous functions
+-------------------
+
+You can use anonymous functions. This is useful if you don't want to create
 a specific function for the operation you want to launch in parallel. The 
 example below is analog to the call of the function 'foo' above:
 
->> uv = APT_run('@(a, b, c)[a + b + c, a * b * c]', [1 2 8], {3}, [4 5 0]); 
+>> uv = APT_run('@(a, b, c)[a + b + c, a * b * c]', [1 2 8], 3, [4 5 0]);   
+
+
+Finding missing jobs
+--------------------
+
+  It may happen that some jobs terminate without notifying APT (for example when 
+  jobs are killed because they use too much memory). If you need to find the IDs 
+  of the non-terminated jobs use the function APT_missing_jobs:
+
+  >> APT_missing_jobs(taskID);  % taskID is displayed by 'APT_run'
+  
+  A script is also available in <temp_drive>/$USER/<temp_dir>.
+  Here <temp_drive> and <temp_dir> refer to the value defined in APT_params.m
+  	
+
+Cleaning temporary files
+------------------------
+
+  Here <temp_drive> and <temp_dir> refer to the value defined in APT_params.m
+  The temporary files associated with the tasks which fail or are launched with 
+  the 'KeepTmp' option stay in <temp_drive>/$USER/<temp_dir>. If you don't need to 
+  relaunch or inspect those tasks you can clean the temporary files by using the 
+  function APT_remove:
+
+  >> APT_remove()
+
+  A script is also available in <temp_drive>/$USER/<temp_dir>.
+
+
+Job information at runtime
+--------------------------
+
+  You have access to a global structure named JOB_INFO which has the following
+  fields:
+  - JOB_INFO.cluster_id:   0 if the function is running on local machine,    
+                           1 if it is running on Meleze and 2 for Sequoia.
+                           
+  - JOB_INFO.user_dir:     This is a directory located on the local node 
+                           (or computer if you run on your machine). This
+                           directory is designed to store temporary files for 
+                           the running task. Each task has its own directory so 
+                           that the files do not mix up between tasks.
+                           
+  - JOB_INFO.job_id:       This is the current parameter set number: 'job_id' is 
+                           between 1 and N where N is the number of different
+                           parameter sets.   
+                                                        
 
 Distributing APT
-================
+----------------
 
 The function 'APT_run_fake' is provided to facilitate the distribution of your 
 code. Just rename 'APT_run_fake.m' into 'APT_run.m', this will transparently run
 your function call on the local computer, using the parfor keyword.
+
+                                                        
+Making coffee
+-------------
+
+  Try:
+  
+>> APT_run([], 'Coffee', 1);
+
 	
 Optional parameters
 ===================
@@ -126,6 +328,8 @@ machine with 2 Matlab instances:
 >> [u v] = APT_run('foo', {1 2 8}, {3}, {4 5 0}, 'UseCluster', 0, 'NJobs', 2);
 
 The available options are:
+
+- 'Coffee' [default: 0]:      If non-zero it makes the coffee.
 
 - 'ClusterID' [default: 0]:   Choice of the cluster. Jobs will be launched on
                               Meleze if set to 1 and Sequoia if set to 2.
@@ -147,10 +351,11 @@ The available options are:
                               a job on the cluster.     
 
 - 'HostName' [default: {}]:   Specify nodes which should be used, e.g. use:
-                              '{'node017', 'node018', 'node019', 'node020'}' on
-                              Sequoia to run on the nodes which have more 
-                              memory. Default is set in 'APT_params' and launch
-                              the jobs on any node.
+                              '{'node017', 'node018', 'node019', 'node020'}' in 
+                              conjonction with 'ClusterID' set to 2 to run your 
+                              jobs on the Sequoia nodes which have more memory. 
+                              Default is set in 'APT_params' and launch the jobs
+                              on any node.
                               
 - 'KeepTmp' [default: 0]:     If non-zero: do not erase the temporary directory 
                               <temp_drive>/<temp_dir>/<taskID> containing the 
@@ -223,19 +428,6 @@ The available options are:
                               argument is the task ID needed to resume the task, 
                               second argument is 2 if at least a job crashed, 1 
                               if all jobs are finished and 0 otherwise.
-                              %%% Example: %%%
-                              [tID, done] = APT_run('@(x)x', 1:3, 'WaitEnd', 0);
-                              tic;
-                              while ~done
-                               fprintf('Running since %d seconds...\n', ...
-                                   floor(toc));
-                               pause(1);
-                               [~, done] = APT_run(tID, 'WaitEnd', 0, ...
-                                   'Verbose', 0);
-                              end
-                              result = APT_run(tID, 'Verbose', 0);
-                              fprintf('Terminated !\n');
-                              disp(result);          
                              
                               
 Compilation options
@@ -247,6 +439,10 @@ unless you recompile with the default options. To compile for a restricted list
 of functions use:
 
   >> APT_compile({'function1' 'function2' ...});
+  
+You can also ignore some path by using the 'Ignore' option:
+
+  >> APT_compile(..., 'Ignore', {'path/to/ignore', 'other/path/to/ignore'});
 
 By default 'APT_compile' force your compiled Matlab code to use one thread. To
 remove this limitation use:
@@ -258,119 +454,6 @@ limitation use:
 
   >> APT_compile(..., 'NoJVM', 0);
           
-
-Interacting with jobs
-=====================
-
-In the following APT_PARAMS.temp_drive and APT_PARAMS.temp_dir are denoted 
-<temp_drive> and <temp_dir> respectively.
-                        
-1°) Looking at errors
-
-  The directory '<temp_drive>/<temp_dir>/<taskID>/logs'
-  contains the reports for each jobs. Each report is named 'report_xxx.txt' 
-  where 'xxx' is the job number (or Matlab instance number if you are running on
-  local machine). You can use the script '<temp_drive>/
-  <temp_dir>/APT_show_report.sh' to easily visualize a report. The usage
-  is:
-	
-  $ ./APT_show_report.sh TaskID JobID
-  
-  A Matlab function APT_show_report with the same arguments is also provided.
-
-	
-2°) Relaunching task
-
-  If some jobs failed because of some bug or memory issue and if this bug does 
-  not affect results' correctness of other jobs, you can relaunch failed jobs
-  by calling 'APT_run' with the task ID as first argument. For example if a task
-  had ID 123456 and if you want to increase the available memory you can do:
-
-  -> res = APT_run(123456, 'Memory', 6000);
-
-  Depending of the value of 'ResumeType' (see section "Optional parameters"),
-  it will re-launch only crashed jobs or all the non terminated jobs.
-
-  
-3°) Setting the maximum number of jobs on cluster
-
-  The script <temp_drive>/<temp_dir>/APT_jn_set allows you to dynamically change
-  the maximum number of jobs allowed on the clusters. The usage is:
-
-  $ ./APT_jn_set [job_limit] [cluster_id]
-  
-  Called with no argument, it will print the current job limit. Otherwise,
-  'job_limit' is the allowed maximum number of running jobs. If 'cluster_id' is
-  not set, it changes the limit for Meleze and Sequoia. If cluster_id is 1 or 2
-  it changes the limit only for Meleze or Sequoia respectively.  
-  A Matlab function APT_jn_set with the same arguments is also provided.  
-
-
-4°) Postponing the loading of results
-  
-  The option 'NoLoad' ask 'APT_run' to not load the results of the jobs. In
-  that case 'APT_run' returns the TaskID which can be used to load the job
-  results one by one by calling 'APT_next_result(TaskID)'. It returns the 
-  JobID and its output arguments. If JobID is empty you have loaded all the
-  results. For example the following call:
-
-  >> [u v] = APT_run('foo', {1 2 8}, {3}, {4 5 0});
-
-  is equivalent to:
-
-  >> taskID = APT_run('foo', {1 2 8}, {3}, {4 5 0}, 'NoLoad', 1);
-  >> u = {};
-  >> v = {};
-  >> [jobID tmpu tmpv] = APT_next_result(taskID);
-  >> while ~isempty(jobID)
-  >>     u{jobID} = tmpu;
-  >>     v{jobID} = tmpv;
-  >>     [jobID tmpu tmpv] = APT_next_result(taskID);
-  >> end
-
-  Missing/Crashed jobs are skipped so JobID is only garanteed to be increasing.
-
-5°) Information about a job
-
-  You have access to a global structure named JOB_INFO which has the following
-  fields:
-  - JOB_INFO.cluster_id:   0 if the function is running on local machine,    
-                           1 if it is running on Meleze and 2 for Sequoia.
-                           
-  - JOB_INFO.user_dir:     This is a directory located on the local node 
-                           (or computer if you run on your machine). This
-                           directory is designed to store temporary files for 
-                           the running task. Each task has its own directory so 
-                           that the files do not mix up between tasks.
-                           
-  - JOB_INFO.job_id:       This is the current parameter set number: 'job_id' is 
-                           between 1 and N where N is the number of different
-                           parameter sets.  
-
-
-6°) Cleaning temporary files
-
-  The temporary files associated with the tasks which fail or are launched with 
-  the 'KeepTmp' option stay in <temp_drive>/<temp_dir>. If you don't need to 
-  relaunch or inspect those tasks you can clean the temporary files by using the 
-  script <temp_drive>/<temp_dir>/APT_remove.sh. The usage is:
-
-  $ ./APT_remove.sh
-
-  A Matlab function APT_remove is also provided.
-
-
-7°) Finding missing jobs
-
-  It may happen that some jobs terminate without notifying APT (for example when 
-  jobs are killed because they use too much memory). If you need to find the IDs 
-  of the non-terminated jobs use the script '<temp_drive>/<temp_dir>/
-  APT_missing_jobs.sh'. The usage is:
-
-  $ ./APT_missing_jobs.sh TaskID
-  
-  A Matlab function APT_missing_jobs with the same arguments is also provided.    
-	
 	
 APT Configuration
 =================
@@ -437,6 +520,8 @@ APT 1.4:
    - Options 'HostName' and 'NoJVM' were added.
    - Function 'APT_next_result' was added.
    - Function 'APT_run_fake' was added.
+   - Do not launch jobs when queue is full.
+   - Minor bug corrections
 
 APT 1.3:
    - MCR is copied on every node. Supports Matlab 2009b, 2010b, 2011a, 2012a.
