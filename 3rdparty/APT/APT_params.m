@@ -14,7 +14,7 @@ function APT_params()
     %================
     
     % SSH login on the cluster.
-    APT_PARAMS.login = getenv('USER');    
+    APT_PARAMS.login = 'vdelaitr'; %getenv('USER');    
     
     % The drive for toolbox temporary files.
     % It has to be either: 'data', 'scratch', 'data0Meleze', 'data1Meleze',
