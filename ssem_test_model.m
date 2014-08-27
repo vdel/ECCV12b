@@ -1,5 +1,5 @@
 function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)        
-    file = fullfile(tmpdir, sprintf('score_%s_%s.mat', vid, params.annots.name));
+    file = fullfile(tmpdir, sprintf('score_%s_%s.mat', vid.id, params.annots.name));
     if exist(file, 'file')
         fprintf('Loading test scores from %s\n', file);
         load(file, 'score');
@@ -35,7 +35,7 @@ function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)
     scores = mean(cat(3, scores{m}), 3);    
 
     % Produce confidence map        
-    back = ssem_load_back(params, vid);
+    back = imread(ssem_load_img(params, vid));
     if size(back, 2) > params.segimwidth
         scale = params.segimwidth / size(back, 2);
         back = imresize(back, [round(size(back, 1) * scale) params.segimwidth]);
@@ -58,7 +58,7 @@ function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)
     score = mean(score, 4);
 
     % Show results
-    annot = ssem_load_annots(params, {vid});
+    annot = ssem_load_annots(params, {vid.id});
     annot = ssem_unpack_annot(annot{1});
     inferred_labels = cell(1, length(params.annots.visuGroups));    
     for k = 1 : length(params.annots.visuGroups)           
@@ -79,14 +79,14 @@ function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)
         
         subplot(2, 2, 3);
         [img proba] = ssem_scores2img(params, score, k);
-        imwrite(img, fullfile(tmpdir, sprintf('softseg_%s_%s_%s.jpg', vid, params.annots.name, params.annots.visuGroups(k).name)));
+        imwrite(img, fullfile(tmpdir, sprintf('softseg_%s_%s_%s.jpg', vid.id, params.annots.name, params.annots.visuGroups(k).name)));
         imagesc(img);        
         axis equal off;   
         title('Soft segmentation');                
 
         subplot(2, 2, 4);              
         img = ssem_scores2img(params, score, k, true);
-        imwrite(img, fullfile(tmpdir, sprintf('hardseg_%s_%s_%s.jpg', vid, params.annots.name, params.annots.visuGroups(k).name)));
+        imwrite(img, fullfile(tmpdir, sprintf('hardseg_%s_%s_%s.jpg', vid.id, params.annots.name, params.annots.visuGroups(k).name)));
         imagesc(img);
         axis equal off;
         title('Hard segmentation');

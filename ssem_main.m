@@ -85,21 +85,22 @@ function avgperf = ssem_main(root, prefix, params)
         % Compute pixel-wise score for each labels
         nvids = length(splits{i});
         scores = cell(1, nvids);
+        test_vids = ssem_load_subvideos(params,  splits{i}, 1);
         for j = 1 : nvids
             fprintf('Testing on video %d/%d...\n', j, nvids);
-            scores{j} = ssem_test_model(params, splitdir, splits{i}{j}, model, bof, bop);    
+            scores{j} = ssem_test_model(params, splitdir, test_vids(j), model, bof, bop);    
         end
         
         % Compute performance
         perf(i, :) = ssem_get_perf_split(params, splits{i}, scores);                
         printMsg(fid, sprintf(' Performance for split %d ', i));        
-        [~, perfstr] = ssem_display_perf(params, perf(i, :));        
+        [~, perfstr] = display_perf(params, perf(i, :));        
         fprintf(fid, perfstr);
     end
     
     % Display performances
     printMsg(fid, 'Final overall performance');
-    [avgperf, perfstr] = ssem_display_perf(params, perf);
+    [avgperf, perfstr] = display_perf(params, perf);
     fprintf(fid, perfstr);
     fclose(fid);
 end

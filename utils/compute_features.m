@@ -17,7 +17,7 @@ function [feat, bbs, scores] = compute_features(params, vid)
         feat = cell(1, length(params.s));
         bbs = cell(1, length(params.s));
         for j = 1 : length(params.s)
-            [feat{j} featpos] = features(img, params.s(j));
+            [feat{j} featpos] = myfeatures(img, params.s(j));
             bbs{j} = [featpos-params.s(j) featpos+params.s(j) repmat((2 * params.s(j))^2, size(featpos, 1), 1)];
         end
         feat = cat(1, feat{:});

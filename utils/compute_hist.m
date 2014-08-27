@@ -13,7 +13,7 @@ function [dataSP labels blocks] = compute_hist(params, tmpdir, vid, meanstd, bof
     end
         
     [segments, neighbours] = segment_back(params, vid.id);
-    img = ssem_load_img(params, vid); 
+    img = imread(ssem_load_img(params, vid)); 
     if size(img, 2) > params.segimwidth
         scale = params.segimwidth / size(img, 2);
         img = imresize(img, [round(size(img, 1) * scale) params.segimwidth]);
