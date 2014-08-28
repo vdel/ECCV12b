@@ -63,7 +63,7 @@ function svm = train_binary_svm_helper(X, Y, C, J, G, bias, L)   %one example pe
             fprintf('(WARNING: Linear SVM only.)\n');
         end
         if bias
-            strbias = '-B 100';
+            strbias = '-B 10';
         else
             strbias = '';
         end        

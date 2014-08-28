@@ -24,7 +24,9 @@ function [ap acc] = eval_binary_svm_helper(opt, X, Y, params)
         scores = test_binary_svm_helper(svm, X{i}); 
         
         [~, ~, ap(i)] = precisionrecall(scores, Y{i});    
-        acc(i) = sum((scores > 0) == Y{i}) / length(Y{i});
+        %acc(i) = sum((scores > 0) == Y{i}) / length(Y{i});
+        acc(i) = sqrt(length(find(scores( logical(Y{i}))  > 0)) / length(find( Y{i})) * ...
+                      length(find(scores(~logical(Y{i})) <= 0)) / length(find(~Y{i})));
         fprintf('AP = %.4g, Acc = %.4g\n', ap(i) * 100, acc(i) * 100);
     end    
     ap = mean(ap);
