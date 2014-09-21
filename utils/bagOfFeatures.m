@@ -108,7 +108,8 @@ function feat = extract_features(params, vids, maxi)
         end
         feat{i} = cell(1, length(params.s));
         for j = 1 : length(params.s)
-            feat{i}{j} = features(img, params.s(j));           
+            f = features(img, params.s(j));           
+            feat{i}{j} = reshape(f, size(f, 1) * size(f, 2), size(f, 3));
         end
         feat{i} = cat(1, feat{i}{:});
     end

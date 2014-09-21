@@ -5,7 +5,7 @@ function params = ssem_set_params(root)
     params.featimwidth = 600;                                              % Background resized to this value for computing features
     params.KA = 1024;                                                      % Number of visual words
     params.s  = [4 8 16 32];                                               % patch size for visual word extraction
-    params.featHardAssign = 0;                                             % Hard assignement (K-means) or soft assignment (GMM)
+    params.featHardAssign = 1;                                             % Hard assignement (K-means) or soft assignment (GMM)
     
     % Pose features
     detector_type = 1;                                                     % detector type:
@@ -23,7 +23,7 @@ function params = ssem_set_params(root)
     params.nms_pose = 0.5;                                                 % nms threshold for the pose detector
     params.nms_bb   = 0.3;                                                 % nms threshold for person bounding boxes
     params.KP = 32;
-    params.poseHardAssign = 0;                                             % Hard assignement (K-means) or soft assignment (GMM)
+    params.poseHardAssign = 1;                                             % Hard assignement (K-means) or soft assignment (GMM)
     params.bbResizeFactor = 2;                                             % resize part boxes returned by pose detector
     
     % Localization features
