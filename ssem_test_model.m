@@ -1,10 +1,10 @@
 function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)        
     file = fullfile(tmpdir, sprintf('score_%s_%s.mat', vid.id, params.annots.name));
-    if exist(file, 'file')
-        fprintf('Loading test scores from %s\n', file);
-        load(file, 'score');
-        return;
-    end                                              
+%     if exist(file, 'file')
+%         fprintf('Loading test scores from %s\n', file);
+%         load(file, 'score');
+%         return;
+%     end                                              
 
     dataSP = compute_hist(params, tmpdir, vid, model(1).meanstd, bof, bop);    
     segments = dataSP.segments;
@@ -35,7 +35,7 @@ function score = ssem_test_model(params, tmpdir, vid, model, bof, bop)
     scores = mean(cat(3, scores{m}), 3);    
 
     % Produce confidence map        
-    back = imread(ssem_load_img(params, vid));
+    back = double(imread(ssem_load_img(params, vid))) / 255;
     if size(back, 2) > params.segimwidth
         scale = params.segimwidth / size(back, 2);
         back = imresize(back, [round(size(back, 1) * scale) params.segimwidth]);
