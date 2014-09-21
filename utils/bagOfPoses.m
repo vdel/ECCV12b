@@ -88,7 +88,7 @@ function [clusters stats] = hardEncoding(params, tmpdir, vids)
     % Compute Kmeans
     obj = Inf;
     for i = 1 : 5 
-        [thisclusters, ~, thisobj] = kmeansmex(joints, params.KP, 1000);
+        [thisclusters, ~, thisobj] = kmeansmex(joints, params.KP, 10);
         fprintf('Iter %d: obj = %g\n', i, thisobj);
         if thisobj < obj
             obj = thisobj;

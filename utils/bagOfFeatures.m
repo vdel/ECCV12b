@@ -69,7 +69,7 @@ function bof = hardEncoding(params, tmpdir, vids)
     
     feat = extract_features(params, vids, 100000)';
     
-    bof = bestKMeans(feat, params.KA, 1000, 0)';
+    bof = bestKMeans(feat, params.KA, 10, 0)';
 %     
 %     try        
 %         fprintf('Trying to launch kmeans in parallel...\n');
