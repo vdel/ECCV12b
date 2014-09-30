@@ -20,9 +20,7 @@ if dimx ~= dimc
 	error('Data dimension does not match dimension of centres')
 end
 
-n2 = repmat(sum(x.^2, 2), 1, ncentres) + ...
-  repmat(sum(c.^2, 2)', ndata, 1) - ...
-  2.*(x*(c'));
+n2 = bsxfun(@plus, sum(x.^2, 2), bsxfun(@minus, sum(c.^2, 2)', 2.*(x*(c'))));
 
 % Rounding errors occasionally cause negative entries in n2
 if any(any(n2<0))
