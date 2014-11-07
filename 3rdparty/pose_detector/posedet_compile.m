@@ -8,12 +8,12 @@ if ~exist('posedet_resize', 'file')
     % 1 is fastest, 3 is slowest 
 
     % 1) multithreaded convolution using blas
-    %cp fconvblas.cc posedet_fconv.cc
+    %!cp fconvblas.cc posedet_fconv.cc
     %mex CFLAGS="\$CFLAGS -std=c99" -O posedet_fconv.cc -lmwblas
     % 2) mulththreaded convolution without blas
-    %cp fconvMT.cc posedet_fconv.cc
+    %!cp fconvMT.cc posedet_fconv.cc
     % mex -O posedet_fconv.cc
     % 3) basic convolution, very compatible
-    cp fconv.cc posedet_fconv.cc
+    !cp fconv.cc posedet_fconv.cc
     mex -O posedet_fconv.cc
 end
