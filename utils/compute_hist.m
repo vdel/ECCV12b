@@ -112,7 +112,7 @@ function [dataSP labels blocks] = compute_hist(params, tmpdir, vid, meanstd, bof
         personbb = cat(1, personbb{:}) * scale;        
         
         if isempty(cleanbb)
-            njoints = length(params.jointnames);
+            njoints = length(params.joints_to_annot);
             if params.Pfeat(1)
                 h2 = sparse(nsegments, njoints * params.KP);
                 [h blocks] = add_block(h, blocks, h2, 'personFeat_jointpos'); 
